@@ -63,7 +63,7 @@ with tab1:
                 with st.form(key=f"edit_form{index}"):
                     edit_word = st.text_input("Word", value=row['Word'])
                     edit_trans = st.text_input("Translation", value=row['Translation'])
-                    edit_example = st.text_input("Example", value=row['Example'])
+                    edit_example = st.text_input("Example", value=(row['Example'] if pd.notna(row['Example']) else ""))
                     col_save, col_cancel = st.columns(2, gap="xsmall", wrap=False)
 
                     st.divider()
