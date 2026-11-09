@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import urllib.parse
 
+LANG = 'fi-FI'
 CSV_FILE = "dictinary.csv"
 
 st.set_page_config(page_title="Online dictinary")
@@ -55,18 +56,14 @@ with tab1:
         search_query = st.text_input("Filter by")
         filtered_df = search_word(search_query) if search_query else df
         for index, row in filtered_df.iterrows():
-            col_w, col_t, col_e, col_b = st.columns([2, 2, 2, 10])
-            with col_w:
-                st.markdown(f"**{row['Word']}**")
-            with col_t:
-                st.markdown(f"{row['Translation']}")
-            with col_e:
-                st.markdown(f"{row['Example']}")
-            with col_b:
+            col_info, col_action = st.columns([4,1], gap="xsmall", wrap=False)
+            with col_info:
+                example_html = f"<br><span style='color: gray; font-size: 0.85em;'>{row['Example']}</span>" if pd.notna(row['Example']) else ""
+                st.markdown(f"**{row['Word']}** - _{row['Translation']}_{example_html}", unsafe_allow_html=True)
+            with col_action:
                 if st.button("🔊", key=f"audio_{index}"):
-                    st.components.v1.html(get_audio(row['Word']), height=0)
+                    st.components.v1.html(get_audio(row['Word'], lang=LANG), height=0)
 
-        st.dataframe(filtered_df, hide_index=True)
         st.caption(f"Showing {len(filtered_df)}/{len(df)} words")
         
 
