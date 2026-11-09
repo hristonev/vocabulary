@@ -53,16 +53,44 @@ with tab1:
     if df.empty:
         st.info("Your dictionary is empty!")
     else:
+        if 'edit_index' not in st.session_state:
+            st.session_state.edit_index = None
         search_query = st.text_input("Filter by")
         filtered_df = search_word(search_query) if search_query else df
         for index, row in filtered_df.iterrows():
-            col_info, col_action = st.columns([4,1], gap="xsmall", wrap=False)
-            with col_info:
-                example_html = f"<br><span style='color: gray; font-size: 0.85em;'>{row['Example']}</span>" if pd.notna(row['Example']) else ""
-                st.markdown(f"**{row['Word']}** - _{row['Translation']}_{example_html}", unsafe_allow_html=True)
-            with col_action:
-                if st.button("🔊", key=f"audio_{index}"):
-                    st.components.v1.html(get_audio(row['Word'], lang=LANG), height=0)
+            if st.session_state.edit_index == index:
+                st.subheader('Editing')
+                with st.form(key=f"edit_form{index}"):
+                    edit_word = st.text_input("Word", value=row['Word'])
+                    edit_trans = st.text_input("Translation", value=row['Translation'])
+                    edit_example = st.text_input("Example", value=row['Example'])
+                    col_save, col_cancel = st.columns(2, gap="xsmall", wrap=False)
+
+                    st.divider()
+                    with col_save:
+                        save_btn = st.form_submit_button("Save")
+                    with col_cancel:
+                        cancel_btn = st.form_submit_button("Cancel")
+                    if save_btn:
+                        df.at[index, 'Word'] = edit_word
+                        df.at[index, 'Translation'] = edit_trans
+                        df.at[index, 'Example'] = edit_example
+                        save_data(df)
+                    if save_btn or cancel_btn:
+                        st.session_state.edit_index = None
+                        st.rerun()
+            else:
+                col_info, col_audio, col_edit = st.columns([4,1,1], gap="xsmall", wrap=False)
+                with col_info:
+                    example_html = f"<br><span style='color: gray; font-size: 0.85em;'>{row['Example']}</span>" if pd.notna(row['Example']) else ""
+                    st.markdown(f"**{row['Word']}** - _{row['Translation']}_{example_html}", unsafe_allow_html=True)
+                with col_audio:
+                    if st.button("🔊", key=f"audio_{index}"):
+                        st.components.v1.html(get_audio(row['Word'], lang=LANG), height=0)
+                with col_edit:
+                    if st.button("✏️", key=f"edit_{index}"):
+                        st.session_state.edit_index = index
+                        st.rerun()
 
         st.caption(f"Showing {len(filtered_df)}/{len(df)} words")
         
